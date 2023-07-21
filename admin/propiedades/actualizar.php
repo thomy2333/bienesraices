@@ -1,4 +1,12 @@
 <?php
+
+    require '../../includes/funciones.php';    
+    $auth = estaAutenticado();
+
+    if(!$auth){
+        header('location: /');
+    }
+    
     //Validar la url por un dia valido
     $id = $_GET['id'];
     $id = filter_var($id, FILTER_VALIDATE_INT);
@@ -125,7 +133,7 @@
 
     }
 
-    require '../../includes/funciones.php';    
+    
     incluirTemplate('header')
 ?>
 

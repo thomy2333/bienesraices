@@ -8,9 +8,9 @@
     $errores = [];
 
     if($_SERVER['REQUEST_METHOD'] === 'POST'){
-        echo "<pre>";
-        var_dump($_POST);
-        echo "</pre>";
+        // echo "<pre>";
+        // var_dump($_POST);
+        // echo "</pre>";
 
         $email = mysqli_real_escape_string($db, filter_var( $_POST['email'], FILTER_VALIDATE_EMAIL));
         $password = mysqli_real_escape_string($db, $_POST['password']);
@@ -24,7 +24,40 @@
         }
 
         if(empty($errores)){
+            //revisar si el existe usuario
+            $query = "SELECT * FROM usuarios WHERE email = '$email' ";
+            $resultado = mysqli_query($db, $query);
+
+            // var_dump($resultado);
             
+            if( $resultado->num_rows){ //comprobar que haya resultado en una consulta uhna base de datos
+                //revisar si el password es correcto
+                $usuario = mysqli_fetch_assoc($resultado);
+
+                //var_dump($usuario['password']);
+
+                //verificar si el password es corresto o no
+                $auth = password_verify($password, $usuario['password']);
+
+                if ($auth) {
+                    // el usuario esta autenticado
+                    session_start();
+
+                    //llenar el arreglo de la sesion
+                    $_SESSION['usuario'] = $usuario['email'];
+                    $_SESSION['login'] = true;
+
+                    header('location: /admin');
+                    
+                    // echo "<pre>";
+                    // var_dump($_SESSION);
+                    // echo "</pre>";
+                } else {
+                    $errores[] = 'El password es incorrecto';
+                }
+            }else{
+                $errores[] = 'El Usuario no existe';
+            }
         }
     }
 
