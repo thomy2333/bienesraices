@@ -21,7 +21,7 @@
     //Ejecutar el codigo despues de que el usuario envia el formulario
     if($_SERVER['REQUEST_METHOD'] === 'POST'){
         //crea una nueva instancia
-        $propiedad = new Propiedad($_POST);
+        $propiedad = new Propiedad($_POST['propiedad']);
         
         //SUBIDA DE ARCHIVOS
     
@@ -31,8 +31,8 @@
 
         //setar al imagen
         //realizar un resize a la imagen con itervecion 
-        if($_FILES['imagen']['tmp_name']){
-            $imagen = Image::make($_FILES['imagen']['tmp_name'])->fit(800,600);
+        if($_FILES['propiedad']['tmp_name']['imagen']){
+            $imagen = Image::make($_FILES['propiedad']['tmp_name']['imagen'])->fit(800,600);
             $propiedad->setImagen($nombreImagen);
         }
         
@@ -51,12 +51,7 @@
             $imagen->save(CARPETA_IMAGENES . $nombreImagen);
 
             //guardar en la base de datos
-            $resultado = $propiedad->guardar();
-
-            if($resultado){
-                //redireccionar al usuario
-                header('Location: /admin?resultado=1');
-            }
+            $propiedad->crear();           
         }
 
     }

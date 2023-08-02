@@ -1,6 +1,7 @@
 <?php
 
 use App\Propiedad;
+use Intervention\Image\ImageManagerStatic as Image;
 
     require '../../includes/app.php';    
     estaAutenticado();
@@ -17,107 +18,41 @@ use App\Propiedad;
     //Obtener los datos de la propiedad
     $propiedad = Propiedad::find($id);
 
-    // echo "<pre>";
-    // var_dump($propiedad);
-    // echo "</pre>";
-
     //consultar para obtener los vendedores
     $consulta = "SELECT * FROM vendedores";
     $resultado = mysqli_query($db, $consulta);
 
     // arreglo de mensaje de errores
-    $errores = [];
+    $errores = Propiedad::getErrores();
 
     //Ejecutar el codigo despues de que el usuario envia el formulario
     if($_SERVER['REQUEST_METHOD'] === 'POST'){
 
-        // echo "<pre>";
-        // var_dump($_POST); nos trae la info cuando mandamos ina info tipo post
-        // echo "</pre>";
+        //asignar los atributos
+        $args = $_POST['propiedad'];
 
-        // echo "<pre>";
-        // var_dump($_FILES); nos permite ver el contenido de los archivos
-        // echo "</pre>";
+        $propiedad->sincronizar($args);
 
-        $titulo = mysqli_real_escape_string( $db, $_POST['titulo'] );
-        $precio = mysqli_real_escape_string( $db, $_POST['precio'] );
-        $descripcion = mysqli_real_escape_string( $db, $_POST['descripcion'] );
-        $habitaciones = mysqli_real_escape_string( $db, $_POST['habitaciones'] );
-        $wc = mysqli_real_escape_string( $db, $_POST['wc'] );
-        $estacionamiento = mysqli_real_escape_string( $db, $_POST['estacionamiento'] );
-        $vendedorId = mysqli_real_escape_string( $db, $_POST['vendedor'] );
-        $creado = mysqli_real_escape_string( $db, date('Y/m/d') );
+        //validacion
+        $errores = $propiedad->validar();
 
-        //asignar files hacia una variable
-        $imagen = $_FILES['imagen'];
+        //subida de archivos
 
-        if(!$titulo){
-            $errores[] = "Debes añadir un titulo";
+        //generar un nombre unico
+        $nombreImagen = md5( uniqid( rand(), true)) .  ".jpg";
+
+        if($_FILES['propiedad']['tmp_name']['imagen']){
+            $imagen = Image::make($_FILES['propiedad']['tmp_name']['imagen'])->fit(800,600);
+            $propiedad->setImagen($nombreImagen);
         }
-        if(!$precio){
-            $errores[] = "El precio es obligatorio";
-        }
-        if( strlen($descripcion) < 50 ){
-            $errores[] = "La descripcion es obligatoria y tiene que tener al menos 50 caracteres";
-        }
-        if(!$habitaciones){
-            $errores[] = "El numero de habitaciones es obligatorio";
-        }
-        if(!$wc){
-            $errores[] = "El numero de baños es obligatorio";
-        }
-        if(!$estacionamiento){
-            $errores[] = "El numero de estacionamiento es obligatorio";
-        }
-        if(!$vendedorId){
-            $errores[] = "Elige un vendedor";
-        }
-        // echo "<pre>";
-        // var_dump($errores);
-        // echo "</pre>";
 
         //revisar el arreglo de errores este vacio
-        if(empty($errores)){
-
-            //SUBIDA DE ARCHIVOS
-
-            //crear la carpeta
-            $carpetaImagenes = '../../imagenes/';
-            if(!is_dir($carpetaImagenes)){
-                mkdir($carpetaImagenes);
-            }
-
-            $nombreImagen = '';
-
-            //eliminar imagen previa
-            if($imagen['name']){
-                unlink($carpetaImagenes . $propiedad['imagen']);
-
-                //generar un nombre unico
-                $nombreImagen = md5( uniqid( rand(), true)) .  ".jpg";
-
-                //subir la imagen
-                move_uploaded_file($imagen['tmp_name'], $carpetaImagenes . $nombreImagen);
-            }else{
-                $nombreImagen =  $propiedad['imagen'];
-            }
-
-            //insertar en la base de datos
-            $query = " UPDATE propiedades SET titulo = '$titulo', precio = '$precio', imagen = '$nombreImagen', descripcion = '$descripcion', habitaciones = $habitaciones, wc = $wc, estacionamiento = '$estacionamiento', vendedores_id = $vendedorId WHERE id = $id  ";
-
-            //echo $query;
-
-            $resultado = mysqli_query($db, $query);
-
-            if($resultado){
-                //redireccionar al usuario
-                header('Location: /admin?resultado=2');
-            }
+        if(empty($errores)){ 
+            //almacenar la imagen
+            $imagen->save(CARPETA_IMAGENES . $nombreImagen);
+            $propiedad->guardar();
         }
-
-    }
-
-    
+    }    
     incluirTemplate('header')
 ?>
 
