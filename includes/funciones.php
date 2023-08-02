@@ -22,3 +22,9 @@ function debuguear($variable){
     echo "</pre>";
     exit;
 }
+
+//escapa el html
+function s($html) : string {
+    $s = htmlspecialchars($html);
+    return $s;
+}
