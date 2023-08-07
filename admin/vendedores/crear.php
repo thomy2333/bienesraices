@@ -18,6 +18,11 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 
     //validar 
     $errores = $vendedor->validar();
+
+    //no hay errores
+    if(empty($errores)) {
+        $vendedor->guardar();
+    }
 }
 
 incluirTemplate('header');

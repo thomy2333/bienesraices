@@ -143,6 +143,15 @@ class ActiveRecord {
         return $resultado;
     }
 
+    //obtener determinado numero de resistros
+    public static function get($cantidad){
+        $query = "SELECT * FROM " . static::$tabla . " LIMIT " . $cantidad;
+
+        $resultado = self::consultaSQL($query);
+
+        return $resultado;
+    }
+
     //busca un registro por su id
     public static function find($id){
         $query = "SELECT * FROM " . static::$tabla . " WHERE id = $id";
